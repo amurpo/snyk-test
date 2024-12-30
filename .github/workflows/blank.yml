@@ -1,0 +1,92 @@
+name: Snyk Analysis
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  snyk-python:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          cd python-app
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Snyk analysis for Python
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          cd python-app
+          snyk test --file=requirements.txt --json > snyk-python-report.json
+
+      - name: Upload Python Snyk report
+        uses: actions/upload-artifact@v3
+        with:
+          name: snyk-python-report
+          path: python-app/snyk-python-report.json
+
+  snyk-js:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          cd js-app
+          npm install
+
+      - name: Run Snyk analysis for JavaScript
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          cd js-app
+          snyk test --file=package.json --json > snyk-js-report.json
+
+      - name: Upload JavaScript Snyk report
+        uses: actions/upload-artifact@v3
+        with:
+          name: snyk-js-report
+          path: js-app/snyk-js-report.json
+
+  snyk-java:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Run Snyk analysis for Java
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          cd java-app
+          snyk test --file=pom.xml --json > snyk-java-report.json
+
+      - name: Upload Java Snyk report
+        uses: actions/upload-artifact@v3
+        with:
+          name: snyk-java-report
+          path: java-app/snyk-java-report.json
