@@ -41,32 +41,26 @@ jobs:
           name: snyk-python-report
           path: python-app/snyk-python-report.json
 
-  snyk-js:
+  snyk-scan-node:
     runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Install Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: Install dependencies
-        run: |
-          cd js-app
-          npm install
+        run: cd ./js-app && npm install
 
       - name: Install Snyk
-        run: |
-          npm install -g snyk
+        run: npm install -g snyk
 
-      - name: Run Snyk analysis for JavaScript
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: |
-          cd js-app
-          snyk test --file=package.json --json > snyk-js-report.json
+      - name: Run Snyk to check for vulnerabilities
+        run: cd ./js-app && snyk test
 
       - name: Upload JavaScript Snyk report
         uses: actions/upload-artifact@v3
